@@ -1,0 +1,57 @@
+Карта регистров Modbus RTU
+---------------------------------------------------------
+Function 3: (Read)
+
+100 - Diff. pressure (1 dot)
+102 - Abs. pressure (1 dot)
+104 - Tempreture (1 dot)
+106 - Density (1 dot)
+108 - Nitrogen (1 dot)
+110 - Carbon dioxide (1 dot)
+112 - Volume flow (1 dot)
+114 - Volume flow per hour (1 dot)
+116 - Volume flow per day (1 dot)
+118 - Volume flow per month (1 dot)
+120 - Volume flow for the last hour (1 dot)
+122 - Volume flow for the last day (1 dot)
+124 - Volume flow for the last month (1 dot)
+
+126 - Year
+127 - Month
+128 - Day
+129 - Hour
+130 - Minute
+131 - Second
+
+140 - Diff. pressure (2 dot)
+142 - Abs. pressure (2 dot)
+144 - Tempreture (2 dot)
+146 - Density (2 dot)
+148 - Nitrogen (2 dot)
+150 - Carbon dioxide (2 dot)
+152 - Volume flow (2 dot)
+154 - Volume flow per hour (2 dot)
+156 - Volume flow per day (2 dot)
+158 - Volume flow per month (1 dot)
+160 - Volume flow for the last hour (2 dot)
+162 - Volume flow for the last day (2 dot)
+164 - Volume flow for the last month (2 dot)
+
+---------------------------------------------------------
+Function 16: (Write)
+
+106 - Density (1 dot)
+108 - Nitrogen (1 dot)
+110 - Carbon dioxide (1 dot)
+146 - Density (2 dot)
+148 - Nitrogen (2 dot)
+150 - Carbon dioxide (2 dot)
+
+126 - Year
+127 - Month
+128 - Day
+129 - Hour
+130 - Minute
+131 - Second
+
+---------------------------------------------------------
