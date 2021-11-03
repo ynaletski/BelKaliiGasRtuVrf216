@@ -3,6 +3,12 @@
 /*26-06-09 введён массив индексов имён алармов ind_prm_alm[8]    */
 #include<math.h>
 
+//02.11.2021 YN
+#define VerModeAndMd5 //Закоментировать если в режиме нет необходимости
+#if defined (VerModeAndMd5)
+int flag_mode_verif = 0;
+#endif
+
 #define Max_dyn_all        44   /**/
 #define Max_save          128   /**/
 #define Max_conf           37   /*число конфиг.параметров задачи*/

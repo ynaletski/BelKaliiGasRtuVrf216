@@ -4,8 +4,29 @@ int step =0;
 unsigned char page_clear=2;
 unsigned char page_temporary;
 unsigned char page_str_pass=0;
-unsigned char OK=9;
+
+//02.11.2021 YN was: OK=9;
+unsigned char OK=15;
+
 unsigned char count_menu=0;
+//------------- -----//\\-----
+
+//02.11.2021 YN -----\\//-----
+#if defined (VerModeAndMd5)
+extern int flag_mode_verif;
+int dot_flow = 1;
+int display_ver_mode = 1;
+float stand_flow = 0.;
+float k_compress = 1.;
+float temperature=0;
+float pressure=0;
+float dif = 0;
+extern int writeValues;
+extern int firstPass;
+
+extern float density;
+extern float nitrogen;
+#endif
 //------------- -----//\\-----
 
 #include<7188xa.h>
@@ -118,7 +139,34 @@ unsigned char *str_page[]=
 	"    ООО Факом технолоджиз     ", //24+25
 	"                     ESC Меню ", //25
 	"   Вычислитель расхода ВРФ    ", //26+27+25
-	"    Учет природного газа      "  //27
+	"    Учет природного газа      ",  //27
+	//02.11.2021 YN
+	#if defined(VerModeAndMd5)
+	"     Md5 (Gas_rtu.exe) =      ", //28
+	"       f59a19846219e1a3       ", //29
+	"       a3ebe5250b4f7b62       ", //30
+	"------------------------------", //31
+	"Уг.г.=0,07 СУ=14,986 Пл=0,6784", //32
+	"  Азот=1   Точка N1   Д=100   ", //33
+	" Диффдавление кПа:            ", //34
+	" Абс.Давление кПа:            ", //35
+	" Температура С   :            ", //36
+	" Коэфф.сжимаемос.:            ", //37
+	" Ст.расход м3/ч  :            ", //38
+	#else
+	"",								  //28
+	"",								  //29
+	"",								  //30
+	"",								  //31
+	"",								  //32
+	"",								  //33
+	"",								  //34
+	"",								  //35
+	"",								  //36
+	"",								  //37
+	"",								  //38
+	#endif
+	" "
 };
 //------------- -----//\\-----
 unsigned char *str_menu[]={
@@ -126,7 +174,11 @@ unsigned char *str_menu[]={
  "Переменные процесса","Настройки процесса","Архив параметров суточный",
  "Архив параметров часовой","Настройки токовых модулей","Модули токового входа",
  "Многоканальные датчики","Счетчики импульсов","Инициализация модема",
- "Коррекция дата-время"};
+ "Коррекция дата-время"
+   #if defined (VerModeAndMd5)
+ ,"Режим поверки" //02.11.2021 YN added "Режим поверки"
+ #endif
+ };
 unsigned char *str_menu1[]={
  "Первая точка учета",
  "Вторая точка учета","Третья точка учета","Четвертая точка учета"};
@@ -402,6 +454,19 @@ void FloatToString (float val,unsigned char buf_str[],
   gcvt(value,10,buf); j=0;
   for (i=0;i<10;i++) if (buf[i] !=0) buf_str[i+offset]=buf[i]; else break;
 }
+
+//02.11.2021
+/*********** Вывод на экран значения переменной *********************/
+void PrintValue (int dispVerMode, unsigned char h, unsigned char v,float f)
+{
+  if(dispVerMode) display_ver_mode++;
+  else display_ver_mode = 0;
+  ClearBuffer();
+  FloatToString(f ,mmi_str,0);
+  Horizont = h;
+  Vertical = v;
+}
+
 /*********** преобразование байта в два символа ***********/
 void ByteToString (unsigned char val,unsigned char index,unsigned char typ)
 { /*используется при выводе архивных даты и времени*/
@@ -606,24 +671,143 @@ void ReadFromMMI (unsigned char buf_mmi[],unsigned char count,
     case 6: case 7: case 8: case 9:/*заголовок*/
     if (KeyFound (buf_mmi,Key_0,Key_6,count)==1) /*"D"*/
 	{
+
+		//02.11.2021 YN  
+		#if defined (VerModeAndMd5)
+		if(flag_mode_verif)
+		{
+			flag_mode_verif=0;
+			writeValues = 2;
+		}
+		
+		dot_flow = 1;
+		//display_ver_mode=1;
+		#endif
+
       GoToMenuMMI(10); 
 	} 
 	else 
 	//------------- -----//\\-----
-    { /* визуализация контрольной суммы */
-	ClearBuffer(); Display.suspend=0; k=0;
+    {
+
+		//02.11.2021 YN
+		#if defined(VerModeAndMd5)
+		if(flag_mode_verif == 0)
+		{
+			time:
+			#endif
+
+		ClearBuffer(); 
+		Display.suspend=0; 
+		k=0;
         for (i=0;i<3;i++) /*выводит дату*/
         { 
-          ByteToString(ReadNVRAM(2-i),k,0);if (i != 2) mmi_str[k+2]=Key_dot;k=k+3;
-	} k=9;count_smb=18;
-	for (i=0;i<3;i++) /*выводит время*/
-	{ 
-          ByteToString(ReadNVRAM(3+i),k,0);if (i != 2) mmi_str[k+2]=0x3a;k=k+3;
-	} Horizont=5;Vertical=4;Display.evt=2;
-      } break;
+          ByteToString(ReadNVRAM(2-i),k,0);
+		  if (i != 2) mmi_str[k+2]=Key_dot;
+		  k=k+3;
+		} 
+		k=9;
+		count_smb=18;
+		for (i=0;i<3;i++) /*выводит время*/
+		{ 
+        	ByteToString(ReadNVRAM(3+i),k,0);
+			if (i != 2) mmi_str[k+2]=0x3a;
+			k=k+3;
+		} 
+		Horizont=5;
+		Vertical=4;
+		Display.evt=2;
+
+		//02.11.2021 YN
+		#if defined (VerModeAndMd5)	
+		}  
+		else
+		{
+			if (KeyFound (buf_mmi,Key_0,Key_C,count)==1) /*"1"*/
+	  		{
+		  		dot_flow = 1;
+				writeValues = display_ver_mode = 1;
+	  		}
+	  		else if (KeyFound (buf_mmi,Key_0,Key_D,count)==1) /*"2"*/
+	  		{
+		   		dot_flow = 2;
+				writeValues = display_ver_mode = 1;
+	  		}
+	  		else if (KeyFound (buf_mmi,Key_0,Key_F,count)==1) /*"3"*/
+	  		{
+		   		dot_flow = 3;
+				writeValues = display_ver_mode = 1;
+	  		}
+
+			if(writeValues)
+			{
+				switch (dot_flow)
+				{
+					case 1:	
+						temperature = -20.; 
+						pressure = 1301.325;
+						dif = 0.45259; 
+					break;
+					case 2:	
+						temperature = 0.; 
+						pressure = 1301.325; 
+						dif = 7.35643;
+					break;
+					case 3:	
+						temperature = 20.; 
+						pressure = 1301.325; 
+						dif = 15.32294;
+					break;		
+				}
+			}
+
+			if(display_ver_mode == 0)
+			{
+				display_ver_mode = 1;
+				goto time;
+			}
+			else if (display_ver_mode == 1)	//значение номер точки
+			{
+				display_ver_mode = 2;
+				ClearBuffer(); 
+				IntegerToString(dot_flow);
+				Horizont=18;
+				Vertical=7;
+				Display.suspend=0;
+				count_smb = 1;
+				Display.evt=2;
+				break;
+			}
+			else if (display_ver_mode == 2) //значение дифф давления
+				PrintValue(1,20,9,dif);
+			else if (display_ver_mode == 3)	//значение давления
+				PrintValue(1,20,10,pressure);
+			else if (display_ver_mode == 4)	//значение температуры
+				PrintValue(1,20,11,temperature);
+			else if (display_ver_mode == 5)	//значение коэффициента сжимаемости
+				PrintValue(1,20,13,k_compress);
+			else if (display_ver_mode == 6)	//значение стандартного расхода
+				PrintValue(0,20,14,stand_flow);
+			Display.suspend=0;
+			count_smb=8;
+			Display.evt=2;
+		}
+		#endif
+		//29.10.2021    --//\\--
+
+    } 
+	break;
+
     case 10:/*основное меню*/
        if (Display.flag==1)
-       WriteMenuToMMI(str_menu[Display.num+Display.row],11); else
+
+	   #if defined(VerModeAndMd5)
+		WriteMenuToMMI(str_menu[Display.num+Display.row],12); //02.11.2021 YN was 11 now 12
+	   #else
+       	WriteMenuToMMI(str_menu[Display.num+Display.row],11); 
+	   #endif
+	   
+	   else
        MoveCursorMMI(buf_mmi,Cursor.size,count);
        MoveListMMI (buf_mmi,count,10);
        if (KeyFound(buf_mmi,Key_0,Key_6,count)==1) //ESC
@@ -648,6 +832,12 @@ void ReadFromMMI (unsigned char buf_mmi[],unsigned char count,
 	 case 9: flg_modem=2; ClearBuffer();Horizont=10;Vertical=3;
 		 SetDisplayPage(17); break;
 	 case 10:Display.point=60; Display.write=0;GoToMenuMMI(20);break;
+
+		//29.10.2021 YN add case 11:
+		#if defined (VerModeAndMd5)
+		case 11:Display.flag=0;flag_mode_verif=1;firstPass=writeValues=1;ReturnToMenuMMI();break;
+		#endif	
+
        }
 	break;
     case 11:/*меню выбора точки для просмотра*/
@@ -1055,6 +1245,26 @@ void ReadFromMMI (unsigned char buf_mmi[],unsigned char count,
 		   		case 6: case 7: case 8: case 9: //"   Вычислитель расхода ВРФ    ", //26+27+25
 					if(page_str_pass==0) page_screen(0,0,26,1);
 					else if(page_str_pass==1) page_screen(0,1,27,2);
+
+					//02.11.2021 YN
+					#if defined (VerModeAndMd5)
+					else if(flag_mode_verif && page_str_pass>1)
+					{
+						if(page_str_pass==2) page_screen(0,0,28,3);
+						else if(page_str_pass==3) page_screen(0,1,29,4);
+						else if(page_str_pass==4) page_screen(0,2,30,5);
+						else if(page_str_pass==5) page_screen(0,5,31,6);
+						else if(page_str_pass==6) page_screen(0,6,32,7);
+						else if(page_str_pass==7) page_screen(0,7,33,8);
+						else if(page_str_pass==8) page_screen(0,9,34,9);
+						else if(page_str_pass==9) page_screen(0,10,35,10);
+						else if(page_str_pass==10) page_screen(0,11,36,11);
+						else if(page_str_pass==11) page_screen(0,13,37,12);
+						else if(page_str_pass==12) page_screen(0,14,38,13);
+						else if(page_str_pass==13) page_screen(0,15,25,OK);
+					}
+					#endif
+
 					else page_screen(0,15,25,OK);
 			    break;
 ///////////////////////////////////////////////////////////////
